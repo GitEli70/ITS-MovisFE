@@ -60,124 +60,147 @@
 </head>
 <body>
 
-  <h1>🎬 OMDb API Explorer</h1>
+<h1>🎬 OMDb API Explorer</h1>
 
-  <div class="form-group">
-    <label for="searchMode"><strong>Tipo di ricerca:</strong></label>
-    <select id="searchMode">
-      <option value="title">🔍 Cerca per titolo</option>
-      <option value="keyword">📚 Cerca per parola chiave (lista)</option>
-      <option value="id">🎯 Cerca per IMDb ID</option>
-    </select>
-  </div>
+<div class="form-group">
+	<label for="searchMode"><strong>Tipo di ricerca:</strong></label>
+	<select id="searchMode">
+	<option value="title">🔍 Cerca per titolo</option>
+	<option value="keyword">📚 Cerca per parola chiave (lista)</option>
+	<option value="id">🎯 Cerca per IMDb ID</option>
+	</select>
+</div>
 
-  <div class="form-group">
-    <input type="text" id="queryInput" placeholder="Inserisci titolo, parola chiave o IMDb ID">
-  </div>
+<div class="form-group">
+	<input type="text" id="queryInput" placeholder="Inserisci titolo, parola chiave o IMDb ID">
+</div>
 
-  <div class="form-group">
-    <select id="typeFilter">
-      <option value="">🎥 Tutti i tipi</option>
-      <option value="movie">Film</option>
-      <option value="series">Serie TV</option>
-      <option value="episode">Episodio</option>
-    </select>
-  </div>
+<div class="form-group">
+	<select id="typeFilter">
+	<option value="">🎥 Tutti i tipi</option>
+	<option value="movie">Film</option>
+	<option value="series">Serie TV</option>
+	<option value="episode">Episodio</option>
+	</select>
+</div>
 
-  <div class="form-group">
-    <input type="text" id="yearFilter" placeholder="Filtra per anno (opzionale)">
-  </div>
+<div class="form-group">
+	<input type="text" id="yearFilter" placeholder="Filtra per anno (opzionale)">
+</div>
 
-  <button onclick="searchOMDb()">Cerca</button>
+<button onclick="searchOMDb()">Cerca</button>
 
-  <div id="result"></div>
+<div id="result"></div>
 
-  <script>
-    const API_KEY = "fd2471d2";
+<!-- Actor Information Container -->
+<div id="actor-info" style="display:none; margin-top: 20px; padding: 20px; border: 1px solid #ccc;">
+	<h2 id="actor-name">Actor Name</h2>
+	<p id="actor-bio">Biography: Loading...</p>
+	<p id="actor-movies">Movies: Loading...</p>
+</div>
 
-    function searchOMDb() {
-      const mode = document.getElementById("searchMode").value;
-      const query = document.getElementById("queryInput").value.trim();
-      const type = document.getElementById("typeFilter").value;
-      const year = document.getElementById("yearFilter").value.trim();
-      const resultBox = document.getElementById("result");
+<script>
+	const API_KEY = "fd2471d2";
 
-      if (!query) {
-        resultBox.innerHTML = "<p>❗ Inserisci una query valida.</p>";
-        return;
-      }
+	function searchOMDb() {
+	const mode = document.getElementById("searchMode").value;
+	const query = document.getElementById("queryInput").value.trim();
+	const type = document.getElementById("typeFilter").value;
+	const year = document.getElementById("yearFilter").value.trim();
+	const resultBox = document.getElementById("result");
 
-      const url = new URL("https://www.omdbapi.com/");
-      url.searchParams.set("apikey", API_KEY);
-      url.searchParams.set("plot", "full");
+	if (!query) {
+		resultBox.innerHTML = "<p>❗ Inserisci una query valida.</p>";
+		return;
+	}
 
-      // Tipo di ricerca
-      if (mode === "title") {
-        url.searchParams.set("t", query);
-      } else if (mode === "keyword") {
-        url.searchParams.set("s", query);
-      } else if (mode === "id") {
-        url.searchParams.set("i", query);
-      }
+	const url = new URL("https://www.omdbapi.com/");
+	url.searchParams.set("apikey", API_KEY);
+	url.searchParams.set("plot", "full");
 
-      if (type) url.searchParams.set("type", type);
-      if (year) url.searchParams.set("y", year);
+	// Tipo di ricerca
+	if (mode === "title") {
+		url.searchParams.set("t", query);
+	} else if (mode === "keyword") {
+		url.searchParams.set("s", query);
+	} else if (mode === "id") {
+		url.searchParams.set("i", query);
+	}
 
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          if (data.Response === "False") {
-            resultBox.innerHTML = `<p>❌ Errore: ${data.Error}</p>`;
-            return;
-          }
+	if (type) url.searchParams.set("type", type);
+	if (year) url.searchParams.set("y", year);
 
-          if (data.Title) {
-            resultBox.innerHTML = renderSingleResult(data);
-          } else if (data.Search) {
-            resultBox.innerHTML = renderMultipleResults(data.Search);
-          } else {
-            resultBox.innerHTML = "<p>⚠️ Nessun risultato trovato.</p>";
-          }
-        })
-        .catch(err => {
-          resultBox.innerHTML = `<p>Errore nella richiesta: ${err}</p>`;
-        });
-    }
+	fetch(url)
+		.then(res => res.json())
+		.then(data => {
+		if (data.Response === "False") {
+			resultBox.innerHTML = `<p>❌ Errore: ${data.Error}</p>`;
+			return;
+		}
 
-    function renderSingleResult(data) {
-      const poster = data.Poster && data.Poster !== "N/A"
-        ? `<img src="${data.Poster}" alt="Poster" style="max-width: 200px; margin-right: 20px;">`
-        : `<div style="width:200px;height:300px;background:#ccc;display:flex;align-items:center;justify-content:center;border-radius:8px;">No poster</div>`;
+		if (data.Title) {
+			resultBox.innerHTML = renderSingleResult(data);
+		} else if (data.Search) {
+			resultBox.innerHTML = renderMultipleResults(data.Search);
+		} else {
+			resultBox.innerHTML = "<p>⚠️ Nessun risultato trovato.</p>";
+		}
+		})
+		.catch(err => {
+		resultBox.innerHTML = `<p>Errore nella richiesta: ${err}</p>`;
+		});
+	}
 
-      return `
-        <div style="display:flex;gap:20px;flex-wrap:wrap;">
-          <div>${poster}</div>
-          <div style="flex:1;min-width:250px;">
-            <h2>${data.Title} (${data.Year})</h2>
-            <p><strong>Tipo:</strong> ${data.Type}</p>
-            <p><strong>Durata:</strong> ${data.Runtime}</p>
-            <p><strong>Genere:</strong> ${data.Genre}</p>
-            <p><strong>Rating IMDb:</strong> ${data.imdbRating}</p>
-            <p><strong>Attori:</strong> ${data.Actors}</p>
-            <p><strong>Trama:</strong> ${data.Plot}</p>
-            <p><strong>Data uscita:</strong> ${data.Released}</p>
-            <p><strong>IMDb ID:</strong> ${data.imdbID}</p>
-          </div>
-        </div>
-      `;
-    }
+	function renderSingleResult(data) {
+	const poster = data.Poster && data.Poster !== "N/A"
+		? `<img src="${data.Poster}" alt="Poster" style="max-width: 200px; margin-right: 20px;">`
+		: `<div style="width:200px;height:300px;background:#ccc;display:flex;align-items:center;justify-content:center;border-radius:8px;">No poster</div>`;
 
-    function renderMultipleResults(list) {
-      return `
-        <h2>Risultati trovati: ${list.length}</h2>
-        <ul>
-          ${list.map(item => `
-            <li><strong>${item.Title}</strong> (${item.Year}) — [${item.Type}] — IMDb ID: <code>${item.imdbID}</code></li>
-          `).join('')}
-        </ul>
-      `;
-    }
-  </script>
+	// Create clickable actors list
+	const actors = data.Actors.split(", ").map(actor => {
+		return `<a href="javascript:void(0);" onclick="showActorInfo('${actor}')">${actor}</a>`;
+	}).join(", ");
+
+	return `
+		<div style="display:flex;gap:20px;flex-wrap:wrap;">
+		<div>${poster}</div>
+		<div style="flex:1;min-width:250px;">
+			<h2>${data.Title} (${data.Year})</h2>
+			<p><strong>Tipo:</strong> ${data.Type}</p>
+			<p><strong>Durata:</strong> ${data.Runtime}</p>
+			<p><strong>Genere:</strong> ${data.Genre}</p>
+			<p><strong>Rating IMDb:</strong> ${data.imdbRating}</p>
+			<p><strong>Attori:</strong> ${actors}</p>
+			<p><strong>Trama:</strong> ${data.Plot}</p>
+			<p><strong>Data uscita:</strong> ${data.Released}</p>
+			<p><strong>IMDb ID:</strong> ${data.imdbID}</p>
+		</div>
+		</div>
+	`;
+	}
+
+	function renderMultipleResults(list) {
+	return `
+		<h2>Risultati trovati: ${list.length}</h2>
+		<ul>
+		${list.map(item => `
+			<li><strong>${item.Title}</strong> (${item.Year}) — [${item.Type}] — IMDb ID: <code>${item.imdbID}</code></li>
+		`).join('')}
+		</ul>
+	`;
+	}
+
+	function showActorInfo(actorName) {
+	const actorInfoContainer = document.getElementById("actor-info");
+
+	// Simple mock actor bio and movies info (this would be dynamic in a real app)
+	// You could call a different API or fetch more details based on the actor's name
+	actorInfoContainer.style.display = "block";
+	document.getElementById("actor-name").innerText = actorName;
+	document.getElementById("actor-bio").innerText = `Biography: Details for ${actorName} would go here.`;
+	document.getElementById("actor-movies").innerText = `Movies: Example movies for ${actorName}.`;
+	}
+</script>
 
 </body>
 </html>
