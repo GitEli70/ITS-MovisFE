@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>OMDb API Explorer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #222;
+    }
+    .form-group {
+      margin: 10px 0;
+    }
+    input, select, button {
+      padding: 10px;
+      width: 100%;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #result {
+      background: #fff;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    .label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    img {
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎬 OMDb API Explorer</h1>
+
+  <div class="form-group">
+    <label for="searchMode"><strong>Tipo di ricerca:</strong></label>
+    <select id="searchMode">
+      <option value="title">🔍 Cerca per titolo</option>
+      <option value="keyword">📚 Cerca per parola chiave (lista)</option>
+      <option value="id">🎯 Cerca per IMDb ID</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <input type="text" id="queryInput" placeholder="Inserisci titolo, parola chiave o IMDb ID">
+  </div>
+
+  <div class="form-group">
+    <select id="typeFilter">
+      <option value="">🎥 Tutti i tipi</option>
+      <option value="movie">Film</option>
+      <option value="series">Serie TV</option>
+      <option value="episode">Episodio</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <input type="text" id="yearFilter" placeholder="Filtra per anno (opzionale)">
+  </div>
+
+  <button onclick="searchOMDb()">Cerca</button>
+
+  <div id="result"></div>
+
+  <script>
+    const API_KEY = "fd2471d2";
+
+    function searchOMDb() {
+      const mode = document.getElementById("searchMode").value;
+      const query = document.getElementById("queryInput").value.trim();
+      const type = document.getElementById("typeFilter").value;
+      const year = document.getElementById("yearFilter").value.trim();
+      const resultBox = document.getElementById("result");
+
+      if (!query) {
+        resultBox.innerHTML = "<p>❗ Inserisci una query valida.</p>";
+        return;
+      }
+
+      const url = new URL("https://www.omdbapi.com/");
+      url.searchParams.set("apikey", API_KEY);
+      url.searchParams.set("plot", "full");
+
+      // Tipo di ricerca
+      if (mode === "title") {
+        url.searchParams.set("t", query);
+      } else if (mode === "keyword") {
+        url.searchParams.set("s", query);
+      } else if (mode === "id") {
+        url.searchParams.set("i", query);
+      }
+
+      if (type) url.searchParams.set("type", type);
+      if (year) url.searchParams.set("y", year);
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (data.Response === "False") {
+            resultBox.innerHTML = `<p>❌ Errore: ${data.Error}</p>`;
+            return;
+          }
+
+          if (data.Title) {
+            resultBox.innerHTML = renderSingleResult(data);
+          } else if (data.Search) {
+            resultBox.innerHTML = renderMultipleResults(data.Search);
+          } else {
+            resultBox.innerHTML = "<p>⚠️ Nessun risultato trovato.</p>";
+          }
+        })
+        .catch(err => {
+          resultBox.innerHTML = `<p>Errore nella richiesta: ${err}</p>`;
+        });
+    }
+
+    function renderSingleResult(data) {
+      const poster = data.Poster && data.Poster !== "N/A"
+        ? `<img src="${data.Poster}" alt="Poster" style="max-width: 200px; margin-right: 20px;">`
+        : `<div style="width:200px;height:300px;background:#ccc;display:flex;align-items:center;justify-content:center;border-radius:8px;">No poster</div>`;
+
+      return `
+        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+          <div>${poster}</div>
+          <div style="flex:1;min-width:250px;">
+            <h2>${data.Title} (${data.Year})</h2>
+            <p><strong>Tipo:</strong> ${data.Type}</p>
+            <p><strong>Durata:</strong> ${data.Runtime}</p>
+            <p><strong>Genere:</strong> ${data.Genre}</p>
+            <p><strong>Rating IMDb:</strong> ${data.imdbRating}</p>
+            <p><strong>Attori:</strong> ${data.Actors}</p>
+            <p><strong>Trama:</strong> ${data.Plot}</p>
+            <p><strong>Data uscita:</strong> ${data.Released}</p>
+            <p><strong>IMDb ID:</strong> ${data.imdbID}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMultipleResults(list) {
+      return `
+        <h2>Risultati trovati: ${list.length}</h2>
+        <ul>
+          ${list.map(item => `
+            <li><strong>${item.Title}</strong> (${item.Year}) — [${item.Type}] — IMDb ID: <code>${item.imdbID}</code></li>
+          `).join('')}
+        </ul>
+      `;
+    }
+  </script>
+
+</body>
+</html>
